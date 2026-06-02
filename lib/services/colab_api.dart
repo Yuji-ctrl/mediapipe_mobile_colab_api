@@ -4,6 +4,9 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 import '../models/analysis_result.dart';
+const api = ColabApiService(
+  apiUrl: 'https://shorthand-elective-certainly.ngrok-free.dev/',
+);
 
 class ColabApiService {
   const ColabApiService({this.apiUrl});

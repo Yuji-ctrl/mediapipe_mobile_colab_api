@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../models/analysis_result.dart';
@@ -20,20 +21,49 @@ class ColabApiService {
       return _sampleResponse();
     }
 
-    final uri = Uri.parse(apiUrl!);
+    final baseUri = Uri.parse(apiUrl!);
+    final analyzePath = baseUri.path.endsWith('/')
+        ? '${baseUri.path}analyze'
+        : '${baseUri.path}/analyze';
+    final uri = baseUri.replace(path: analyzePath);
+
+    debugPrint('ColabApiService: sending request to $uri');
+    debugPrint('ColabApiService: request fields={"mode": "$mode"}');
+    debugPrint('ColabApiService: video path=${videoFile.path}');
+
     final request = http.MultipartRequest('POST', uri);
     request.fields['mode'] = mode;
-    request.files.add(await http.MultipartFile.fromPath('video', videoFile.path));
 
-    final response = await request.send();
-    final body = await response.stream.bytesToString();
-
-    if (response.statusCode != 200) {
-      throw HttpException('Colab API error: ${response.statusCode}');
+    try {
+      request.files.add(await http.MultipartFile.fromPath('video', videoFile.path));
+      debugPrint('ColabApiService: attached video file size=${await File(videoFile.path).length()} bytes');
+    } catch (error) {
+      throw FileSystemException('動画ファイルの読み込みに失敗しました: ${error.toString()}', videoFile.path);
     }
 
-    final decoded = jsonDecode(body) as Map<String, dynamic>;
-    return AnalysisResult.fromJson(decoded);
+    http.StreamedResponse response;
+    try {
+      response = await request.send();
+    } catch (error) {
+      throw HttpException('ネットワーク接続に失敗しました: ${error.toString()}');
+    }
+
+    final body = await response.stream.bytesToString();
+    debugPrint('ColabApiService: response status=${response.statusCode}');
+    debugPrint('ColabApiService: response headers=${response.headers}');
+    debugPrint('ColabApiService: response body=$body');
+
+    if (response.statusCode != 200) {
+      throw HttpException('Colab API error: ${response.statusCode}, body=$body');
+    }
+
+    try {
+      final decoded = jsonDecode(body) as Map<String, dynamic>;
+      debugPrint('ColabApiService: decoded JSON keys=${decoded.keys.toList()}');
+      return AnalysisResult.fromJson(decoded);
+    } catch (error) {
+      throw FormatException('レスポンスのJSON解析に失敗しました: ${error.toString()}, body=$body');
+    }
   }
 
   AnalysisResult _sampleResponse() {

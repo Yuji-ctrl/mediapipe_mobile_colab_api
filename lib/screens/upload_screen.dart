@@ -17,7 +17,8 @@ class UploadScreen extends StatefulWidget {
 
 class _UploadScreenState extends State<UploadScreen> {
   final ImagePicker _picker = ImagePicker();
-  final ColabApiService _apiService = const ColabApiService();
+  // final ColabApiService _apiService = const ColabApiService();
+  final ColabApiService _apiService = api;
 
   XFile? _selectedVideo;
   bool _isSending = false;

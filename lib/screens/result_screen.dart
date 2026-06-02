@@ -9,6 +9,7 @@ class ResultScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('ResultScreen: ${result.toJson()}');
     return Scaffold(
       appBar: AppBar(
         title: const Text('解析結果'),

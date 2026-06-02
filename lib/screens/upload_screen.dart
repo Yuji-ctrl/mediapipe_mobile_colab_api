@@ -64,9 +64,11 @@ class _UploadScreenState extends State<UploadScreen> {
           builder: (_) => ResultScreen(result: result),
         ),
       );
-    } catch (error) {
+    } catch (error, stackTrace) {
+      debugPrint('sendVideoForAnalysis failed: $error');
+      debugPrint('$stackTrace');
       setState(() {
-        _errorMessage = '送信に失敗しました。ネットワーク環境やAPI設定を確認してください。';
+        _errorMessage = '送信に失敗しました：${error.toString()}';
       });
     } finally {
       if (mounted) {
